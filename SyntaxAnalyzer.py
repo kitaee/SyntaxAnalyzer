@@ -65,33 +65,33 @@ class SyntaxAnalyzer:
 
 
 def main():
-    dfa = SyntaxAnalyzer()
-    dfa.SetTransitionTable(SLR_TABLE)
+    syntaxDfa = SyntaxAnalyzer()
+    syntaxDfa.SetTransitionTable(SLR_TABLE)
     inputString = "id * id $"
     inputStringList = inputString.split()
     leftSubstring = []
-    stack = [dfa.currentState]
+    stack = [syntaxDfa.currentState]
     isAccepted = False
     while len(inputStringList) != 0:
-        if dfa.CheckNextState(inputStringList[0])[0] == "S":
-            stateNumber = dfa.CheckNextState(inputStringList[0])[1::]
+        if syntaxDfa.CheckNextState(inputStringList[0])[0] == "S":
+            stateNumber = syntaxDfa.CheckNextState(inputStringList[0])[1::]
             leftSubstring.append(inputStringList.pop(0))
-            dfa.SetState("T" + str(stateNumber))
-            stack.append(dfa.currentState)
-        elif dfa.CheckNextState(inputStringList[0])[0] == "R":
-            reduceIndex = dfa.CheckNextState(inputStringList[0])[1::]
+            syntaxDfa.SetState("T" + str(stateNumber))
+            stack.append(syntaxDfa.currentState)
+        elif syntaxDfa.CheckNextState(inputStringList[0])[0] == "R":
+            reduceIndex = syntaxDfa.CheckNextState(inputStringList[0])[1::]
             for k in range(ReduceLengthList[int(reduceIndex) - 1]):
                 leftSubstring.pop()
                 stack.pop()
             inputStringList.insert(0, ReduceStringList[int(reduceIndex) - 1])
-            dfa.SetState(stack[-1])
+            syntaxDfa.SetState(stack[-1])
             if inputStringList[0] == "S'":
                 isAccepted = True
                 break
         else:
-            dfa.SetState("T" + dfa.CheckNextState(inputStringList[0]))
+            syntaxDfa.SetState("T" + syntaxDfa.CheckNextState(inputStringList[0]))
             leftSubstring.append(inputStringList.pop(0))
-            stack.append(dfa.currentState)
+            stack.append(syntaxDfa.currentState)
 
     if isAccepted:
         print("ACCEPTED!")
