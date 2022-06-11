@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import print_function
 
-DFA = {
+DFA = {  # Lexical Analyzer을 위한 DFA
     "FinalStates": {
         "T1": "WHITESPACE",
         "T2": "WHITESPACE",
@@ -475,7 +475,7 @@ DFA = {
     }
 }
 
-SLR_TABLE = {
+SLR_TABLE = {  # SLR Parsing Table
     "ACCEPTED_STATES": {
         "T1": "",
         "T2": "",
@@ -983,14 +983,15 @@ SLR_TABLE = {
     }
 }
 
-ReduceLengthList = [1, 2, 2, 0, 3, 9, 3, 0, 4, 0, 2, 0, 1, 4, 11, 7, 1, 1, 3, 1, 3, 1, 3, 1, 1, 3, 3]
+ReduceLengthList = [1, 2, 2, 0, 3, 9, 3, 0, 4, 0, 2, 0, 1, 4, 11, 7, 1, 1, 3, 1, 3, 1, 3, 1, 1, 3,
+                    3]  # Reduce 할 때, Stack에서 뺄 수를 정해줌
 ReduceStringList = ["START", "CODE", "CODE", "CODE", "VDECL", "FDECL", "ARG", "ARG", "MOREARGS", "MOREARGS", "BLOCK",
                     "BLOCK",
                     "STMT", "STMT", "STMT", "STMT", "RHS", "RHS", "EXPR", "EXPR", "TERM", "TERM", "FACTOR", "FACTOR",
-                    "FACTOR", "COND", "RETURN"]
+                    "FACTOR", "COND", "RETURN"]  # CFG에서 left side에 있는걸 담당함, Reduce에서 바뀔 때 사용함
 
 
-class LexicalAnalyzer:
+class LexicalAnalyzer:  # Lexical Analyzer Class
 
     def __init__(self):
         self.table = {}  # Transition Table 초기화
@@ -1078,22 +1079,19 @@ def main():
     inputString = input("Enter inputString : ")
     print("Input : {}".format(inputString))
     inputString = list(inputString)
-    stringBucket = []
-    tokenList = []
+    stringBucket = []  # String들을 하나씩 담을 bucket
+    tokenList = []  # Token들을 담을 bucket
     while len(inputString) != 0:
-        if len(inputString) > 1 and inputString[0] == "!" and inputString[1] == "=":
-            inputString.pop(0)
-            nextState = dfa.CheckNextState("!" + inputString[0])
-        else:
-            nextState = dfa.CheckNextState(inputString[0])
-        if nextState == "rejected":
-            if dfa.isFinalState():
-                if dfa.GetToken() == "WHITESPACE":
+        nextState = dfa.CheckNextState(inputString[0])  # input 값에서 하나씩 빼오면서 Transition Table에서 체크함
+        if nextState == "rejected":  # 그 다음 State가 없을 경우
+            if dfa.isFinalState():  # 최종 지점일 경우
+                if dfa.GetToken() == "WHITESPACE":  # WhiteSpace인 경우는 필요없으므로 토큰값에 넣질 않음
                     del stringBucket[:]
                     dfa.Reset()
                     continue
 
-                if ''.join(map(str, stringBucket)) == '=' and len(inputString) > 0 and inputString[0] == '=':
+                if ''.join(map(str, stringBucket)) == '=' and len(inputString) > 0 and inputString[
+                    0] == '=':  # ==(comparison)을 체크
                     inputString.pop(0)
                     dfa.Reset()
                     tempString = "=="
@@ -1106,7 +1104,8 @@ def main():
                     dfa.Reset()
                     continue
 
-                if ''.join(map(str, stringBucket)) == '<' and len(inputString) > 0 and inputString[0] == '=':
+                if ''.join(map(str, stringBucket)) == '<' and len(inputString) > 0 and inputString[
+                    0] == '=':  # <=(comparison)을 체크하기 위함
                     inputString.pop(0)
                     dfa.Reset()
                     tempString = "<="
@@ -1119,7 +1118,8 @@ def main():
                     dfa.Reset()
                     continue
 
-                if ''.join(map(str, stringBucket)) == '>' and len(inputString) > 0 and inputString[0] == '=':
+                if ''.join(map(str, stringBucket)) == '>' and len(inputString) > 0 and inputString[
+                    0] == '=':  # >=(comparison)을 체크하기 위함
                     inputString.pop(0)
                     dfa.Reset()
                     tempString = ">="
@@ -1139,7 +1139,8 @@ def main():
                     del stringBucket[:]
                     dfa.Reset()
                     continue
-                if ''.join(map(str, stringBucket)) == "int" or ''.join(map(str, stringBucket)) == "char":
+                if ''.join(map(str, stringBucket)) == "int" or ''.join(
+                        map(str, stringBucket)) == "char":  # vtype을 체크하기 위함
                     dfa.Reset()
                     newNextState = dfa.CheckNextState(''.join(map(str, stringBucket)))
                     dfa.SetState(newNextState)
@@ -1150,7 +1151,8 @@ def main():
                     dfa.Reset()
                     continue
                 if ''.join(map(str, stringBucket)) == "return" or ''.join(map(str, stringBucket)) == "while" or ''.join(
-                        map(str, stringBucket)) == "if" or ''.join(map(str, stringBucket)) == "else":
+                        map(str, stringBucket)) == "if" or ''.join(
+                    map(str, stringBucket)) == "else":  # keyword를 체크하기 위함
                     dfa.Reset()
                     newNextState = dfa.CheckNextState(''.join(map(str, stringBucket)))
                     dfa.SetState(newNextState)
@@ -1161,7 +1163,8 @@ def main():
                     dfa.Reset()
                     continue
                 if ''.join(map(str, stringBucket)) == "RETURN" or ''.join(map(str, stringBucket)) == "WHILE" or ''.join(
-                        map(str, stringBucket)) == "IF" or ''.join(map(str, stringBucket)) == "ELSE":
+                        map(str, stringBucket)) == "IF" or ''.join(
+                    map(str, stringBucket)) == "ELSE":  # "Else" 같은 대문자 keyword를 체크해주기 위함
                     dfa.Reset()
                     tempString = ''.join(map(str, stringBucket))
                     tempString = tempString.lower()
@@ -1173,7 +1176,8 @@ def main():
                     del stringBucket[:]
                     dfa.Reset()
                     continue
-                if ''.join(map(str, stringBucket)) == "INT" or ''.join(map(str, stringBucket)) == "CHAR":
+                if ''.join(map(str, stringBucket)) == "INT" or ''.join(
+                        map(str, stringBucket)) == "CHAR":  # "INT" 같은 대문자 vtype을 체크해주기 위함
                     dfa.Reset()
                     tempString = ''.join(map(str, stringBucket))
                     tempString = tempString.lower()
@@ -1198,8 +1202,8 @@ def main():
             else:
                 print("error1")
                 break
-        else:
-            if ''.join(map(str, stringBucket)) == '-' and tokenList[-1] != "OP" and tokenList[-1] != "ASSIGN":
+        else:  # 그 다음 state가 reject가 아닐 경우, stringBucket에 계속 inputString 추가, 위랑 원리가 같은 부분은 주석 생략
+            if ''.join(map(str, stringBucket)) == '-' and tokenList[-1] != "OP" and tokenList[-1] != "ASSIGN":  # -일 경우 마지막 토큰이 무엇이 나오냐에 따라 operation 설정
                 # print("<{},{}>".format(dfa.GetToken(), ''.join(map(str, stringBucket))), end='')
                 lexicalResultList.append("addsub")  # 수정1
                 tokenList.append(dfa.GetToken())
@@ -1271,7 +1275,7 @@ def main():
                 del stringBucket[:]
                 dfa.Reset()
     newLexicalResultList = []
-    for k in range(len(lexicalResultList)):
+    for k in range(len(lexicalResultList)): # Syntax Analyzer에 사용되는 SLR Parsing 테이블을 위해 token 변환
         if lexicalResultList[k] == "integer":
             newLexicalResultList.append("num")
         elif lexicalResultList[k] == "string":
@@ -1287,7 +1291,7 @@ def main():
     print("Symbol Table : ", end='')
     print(symbolTableList)
     print("-------------Syntax Analyzer Start-------------")
-    newLexicalResultList.append('$')
+    newLexicalResultList.append('$')    # SLR 테이블에 필요한 endMarker 추가
     syntaxDfa = SyntaxAnalyzer()
     syntaxDfa.SetTransitionTable(SLR_TABLE)
     inputStringList = newLexicalResultList
@@ -1297,19 +1301,19 @@ def main():
     while len(inputStringList) != 0:
         if syntaxDfa.CheckNextState(inputStringList[0]) == "rejected":
             break
-        if syntaxDfa.CheckNextState(inputStringList[0])[0] == "S":
+        if syntaxDfa.CheckNextState(inputStringList[0])[0] == "S":  # 그 다음 state가 S로 시작해 Shift 해야하는 경우
             stateNumber = syntaxDfa.CheckNextState(inputStringList[0])[1::]
             leftSubstring.append(inputStringList.pop(0))
             syntaxDfa.SetState("T" + str(stateNumber))
             stack.append(syntaxDfa.currentState)
-        elif syntaxDfa.CheckNextState(inputStringList[0])[0] == "R":
+        elif syntaxDfa.CheckNextState(inputStringList[0])[0] == "R":  # 그 다음 state가 R로 시작해 Reduce 해야하는 경우
             reduceIndex = syntaxDfa.CheckNextState(inputStringList[0])[1::]
-            for k in range(ReduceLengthList[int(reduceIndex) - 1]):
+            for k in range(ReduceLengthList[int(reduceIndex) - 1]): # 바뀌는 수 만큼 상태 스택에서 빼줌
                 leftSubstring.pop()
                 stack.pop()
             inputStringList.insert(0, ReduceStringList[int(reduceIndex) - 1])
             syntaxDfa.SetState(stack[-1])
-            if inputStringList[0] == "START":
+            if inputStringList[0] == "START":   # 모든 non-Terminal들이 Reduce되고 START으로 돌아올 경우 Accepted 변환
                 isAccepted = True
                 break
         else:
@@ -1317,9 +1321,9 @@ def main():
             leftSubstring.append(inputStringList.pop(0))
             stack.append(syntaxDfa.currentState)
 
-    if isAccepted:
+    if isAccepted:  # Token valid
         print("Syntax Analyzer Accepted!")
-    else:
+    else:   # Token unvalid
         print("Syntax Analyzer Rejected!")
 
 
