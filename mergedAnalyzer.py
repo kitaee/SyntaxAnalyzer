@@ -1003,7 +1003,7 @@ class LexicalAnalyzer:
 
     def CheckNextState(self, _input):  # 다음 state를 check
         if not _input in self.table[self.currentState]:  # 만약 테이블 값에 없는 input 값이 들어오면 에러 반환 후 종료
-            print("error")
+            print("Lexical Analyzer Rejected!")
             exit()
         nextState = self.table[self.currentState][_input]
         if nextState == "":  # 다음 state가 rejected 상태이면 "rejected" 반환
@@ -1046,7 +1046,7 @@ class SyntaxAnalyzer:
 
     def CheckNextState(self, _input):  # 다음 state를 check
         if not _input in self.table[self.currentState]:  # 만약 테이블 값에 없는 input 값이 들어오면 에러 반환 후 종료
-            print("error")
+            print("Syntax Analyzer Rejected!")
             exit()
         nextState = self.table[self.currentState][_input]
         if nextState == "":  # 다음 state가 rejected 상태이면 "rejected" 반환
@@ -1078,17 +1078,21 @@ def main():
     inputString = input("Enter inputString : ")
     print("Input : {}".format(inputString))
     inputString = list(inputString)
-    print("Output : ", end='')
     stringBucket = []
     tokenList = []
     while len(inputString) != 0:
-        nextState = dfa.CheckNextState(inputString[0])
+        if len(inputString) > 1 and inputString[0] == "!" and inputString[1] == "=":
+            inputString.pop(0)
+            nextState = dfa.CheckNextState("!" + inputString[0])
+        else:
+            nextState = dfa.CheckNextState(inputString[0])
         if nextState == "rejected":
             if dfa.isFinalState():
                 if dfa.GetToken() == "WHITESPACE":
                     del stringBucket[:]
                     dfa.Reset()
                     continue
+
                 if ''.join(map(str, stringBucket)) == '=' and len(inputString) > 0 and inputString[0] == '=':
                     inputString.pop(0)
                     dfa.Reset()
@@ -1101,6 +1105,33 @@ def main():
                     del stringBucket[:]
                     dfa.Reset()
                     continue
+
+                if ''.join(map(str, stringBucket)) == '<' and len(inputString) > 0 and inputString[0] == '=':
+                    inputString.pop(0)
+                    dfa.Reset()
+                    tempString = "<="
+                    newNextState = dfa.CheckNextState(tempString)
+                    dfa.SetState(newNextState)
+                    # print("<{},{}>".format(dfa.GetToken(), tempString), end='')
+                    lexicalResultList.append(dfa.GetToken().lower())
+                    tokenList.append(dfa.GetToken())
+                    del stringBucket[:]
+                    dfa.Reset()
+                    continue
+
+                if ''.join(map(str, stringBucket)) == '>' and len(inputString) > 0 and inputString[0] == '=':
+                    inputString.pop(0)
+                    dfa.Reset()
+                    tempString = ">="
+                    newNextState = dfa.CheckNextState(tempString)
+                    dfa.SetState(newNextState)
+                    # print("<{},{}>".format(dfa.GetToken(), tempString), end='')
+                    lexicalResultList.append(dfa.GetToken().lower())
+                    tokenList.append(dfa.GetToken())
+                    del stringBucket[:]
+                    dfa.Reset()
+                    continue
+
                 if dfa.GetToken() == "RPAREN" or dfa.GetToken() == "LPAREN" or dfa.GetToken() == "RBRACE" or dfa.GetToken() == "LBRACE" or dfa.GetToken() == "ASSIGN" or dfa.GetToken() == "SEMI" or dfa.GetToken() == "RETURN" or dfa.GetToken() == "IF" or dfa.GetToken() == "ELSE" or dfa.GetToken() == "WHILE":
                     # print("<{}>".format(dfa.GetToken()), end='')
                     lexicalResultList.append(dfa.GetToken().lower())
@@ -1239,7 +1270,6 @@ def main():
                 tokenList.append(dfa.GetToken())
                 del stringBucket[:]
                 dfa.Reset()
-    lexicalResultList.append("$")
     newLexicalResultList = []
     for k in range(len(lexicalResultList)):
         if lexicalResultList[k] == "integer":
@@ -1250,8 +1280,14 @@ def main():
             newLexicalResultList.append("comp")
         else:
             newLexicalResultList.append(lexicalResultList[k])
-    print(newLexicalResultList)
+
+    symbolTableList = []
+    for k in range(len(newLexicalResultList)):
+        symbolTableList.append(newLexicalResultList[k].upper())
+    print("Symbol Table : ", end='')
+    print(symbolTableList)
     print("-------------Syntax Analyzer Start-------------")
+    newLexicalResultList.append('$')
     syntaxDfa = SyntaxAnalyzer()
     syntaxDfa.SetTransitionTable(SLR_TABLE)
     inputStringList = newLexicalResultList
@@ -1259,6 +1295,8 @@ def main():
     stack = [syntaxDfa.currentState]
     isAccepted = False
     while len(inputStringList) != 0:
+        if syntaxDfa.CheckNextState(inputStringList[0]) == "rejected":
+            break
         if syntaxDfa.CheckNextState(inputStringList[0])[0] == "S":
             stateNumber = syntaxDfa.CheckNextState(inputStringList[0])[1::]
             leftSubstring.append(inputStringList.pop(0))
@@ -1280,9 +1318,9 @@ def main():
             stack.append(syntaxDfa.currentState)
 
     if isAccepted:
-        print("ACCEPTED!")
+        print("Syntax Analyzer Accepted!")
     else:
-        print("REJECTED!")
+        print("Syntax Analyzer Rejected!")
 
 
 if __name__ == "__main__":
